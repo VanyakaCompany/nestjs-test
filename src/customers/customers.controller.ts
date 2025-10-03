@@ -1,13 +1,17 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ParserService } from './parser.service';
+import { CustomersService } from './customers.service';
 
 @Controller()
 export class CustomersController {
-    constructor(private readonly parserService: ParserService) {}
+    constructor(
+        private readonly customersService: CustomersService,
+        private readonly parserService: ParserService,
+    ) {}
 
     @Get('customers')
-    findAll(): string {
-        return 'Список всех пользователей в БД';
+    async findAll() {
+        return this.customersService.findAll()
     }
 
     @Post('upload')
