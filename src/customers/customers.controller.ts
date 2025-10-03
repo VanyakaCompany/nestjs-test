@@ -1,6 +1,11 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, UsePipes } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
 import { ParserService } from './parser.service';
 import { CustomersService } from './customers.service';
+import { CreateCustomerDto } from './dto/create-customer.dto';
+import { PaginationPipe } from '../common/pipes/pagination.pipe';
+import { handleValidationErrors } from '../common/helpers/validation.helper';
 
 @Controller()
 export class CustomersController {
@@ -10,13 +15,26 @@ export class CustomersController {
     ) {}
 
     @Get('customers')
-    async findAll() {
-        return this.customersService.findAll()
+    @UsePipes(PaginationPipe)
+    async findAll(@Query() query: { page: number; limit: number }) {
+        const { page, limit } = query;
+        return this.customersService.findAllWithPagination(page, limit);
     }
 
     @Post('upload')
-    upload(@Body() rawXml: string) {
+    async upload(@Body() rawXml: string) {
         const parsed = this.parserService.parseSafe(rawXml);
+
+        for (const customer of parsed.customers.customer) {
+            const createCustomerDto = plainToInstance(CreateCustomerDto, customer);
+            try {
+                await validateOrReject(createCustomerDto);
+            } catch (errors) {
+                handleValidationErrors(errors);
+            }
+            await this.customersService.create(createCustomerDto)
+        }
+
         return { parsed };
     }
 }
