@@ -1,14 +1,18 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { ParserService } from './parser.service';
 
-@Controller('customers')
+@Controller()
 export class CustomersController {
-    @Get()
+    constructor(private readonly parserService: ParserService) {}
+
+    @Get('customers')
     findAll(): string {
         return 'Список всех пользователей в БД';
     }
 
-    @Post()
-    upload(): string {
-        return 'Добавление пользователей';
+    @Post('upload')
+    upload(@Body() rawXml: string) {
+        const parsed = this.parserService.parseSafe(rawXml);
+        return { parsed };
     }
 }
