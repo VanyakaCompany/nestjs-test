@@ -11,7 +11,7 @@ export class CustomersService {
     async findAllWithPagination(page: number, limit: number) {
         const skip = (page - 1) * limit;
 
-        const [users, total] = await Promise.all([
+        const [customers, total] = await Promise.all([
             this.customerModel.find().skip(skip).limit(limit).exec(),
             this.customerModel.countDocuments().exec(),
         ]);
@@ -19,7 +19,7 @@ export class CustomersService {
         const totalPages = Math.ceil(total / limit);
 
         return {
-            data: users,
+            data: customers,
             meta: {
                 total,
                 page,

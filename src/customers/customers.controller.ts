@@ -5,7 +5,6 @@ import { ParserService } from './parser.service';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { PaginationPipe } from '../common/pipes/pagination.pipe';
-import { handleValidationErrors } from '../common/helpers/validation.helper';
 
 @Controller()
 export class CustomersController {
@@ -25,16 +24,29 @@ export class CustomersController {
     async upload(@Body() rawXml: string) {
         const parsed = this.parserService.parseSafe(rawXml);
 
+        const added: any[] = []
+        const invalid: any[] = []
+        const duplicated:any[] = []
+        const failed: any[] = []
+
         for (const customer of parsed.customers.customer) {
             const createCustomerDto = plainToInstance(CreateCustomerDto, customer);
+
             try {
-                await validateOrReject(createCustomerDto);
-            } catch (errors) {
-                handleValidationErrors(errors);
+                await validateOrReject(createCustomerDto, { whitelist: true });
+                added.push(await this.customersService.create(createCustomerDto));
+            } catch (err) {
+                if (err.code === 11000) {
+                    duplicated.push(createCustomerDto);
+                } else if (Array.isArray(err) && err[0]?.constraints) {
+                    const reason = err.map(e => Object.values(e.constraints || {})).flat()
+                    invalid.push({ ...createCustomerDto, reason });
+                } else {
+                    failed.push(createCustomerDto)
+                }
             }
-            await this.customersService.create(createCustomerDto)
         }
 
-        return { parsed };
+        return { added, invalid, duplicated, failed };
     }
 }
