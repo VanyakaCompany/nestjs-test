@@ -39,10 +39,10 @@ export class CustomersController {
                 if (err.code === 11000) {
                     duplicated.push(createCustomerDto);
                 } else if (Array.isArray(err) && err[0]?.constraints) {
-                    const reason = err.map(e => Object.values(e.constraints || {})).flat()
+                    const reason = err.map(e => Object.values(e.constraints || {})).flat();
                     invalid.push({ ...createCustomerDto, reason });
                 } else {
-                    failed.push(createCustomerDto)
+                    failed.push(createCustomerDto);
                 }
             }
         }

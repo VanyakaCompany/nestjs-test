@@ -9,6 +9,6 @@ async function bootstrap() {
 
     app.use(bodyParser.text({ type: 'application/xml' }));
 
-    await app.listen(configService.get<number>('PORT') as number);
+    await app.listen(configService.get<number>('PORT')!);
 }
 bootstrap();

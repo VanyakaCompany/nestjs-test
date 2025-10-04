@@ -15,7 +15,7 @@ export class Customer {
     email: string;
 
     @Prop()
-    status: string;
+    status?: string;
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);

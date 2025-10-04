@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, FilterQuery, SortOrder, UpdateQuery } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Customer } from './schemas/customer.schema';
@@ -29,8 +29,41 @@ export class CustomersService {
         };
     }
 
+    async findOne(
+        filter: FilterQuery<Customer>,
+        options?: {
+            excludeFields?: (keyof Customer)[],
+            projection?: Record<string, 0 | 1>,
+            sort?: Record<string, SortOrder>
+        }
+    ): Promise<Customer | null> {
+        const query: FilterQuery<Customer> = { ...filter };
+
+        if (options?.excludeFields?.length) {
+            options.excludeFields.forEach(field => {
+                query[field] = { $exists: false };
+            });
+        }
+
+        let mongoQuery = this.customerModel.findOne(query);
+
+        if (options?.projection) {
+            mongoQuery = mongoQuery.select(options.projection);
+        }
+
+        if (options?.sort) {
+            mongoQuery = mongoQuery.sort(options.sort);
+        }
+
+        return mongoQuery.exec();
+    }
+
     async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
         const createdCustomer = new this.customerModel(createCustomerDto);
         return createdCustomer.save();
+    }
+
+    async updateOne(filter: FilterQuery<Customer>, update: UpdateQuery<Customer>): Promise<Customer | null> {
+        return this.customerModel.findOneAndUpdate(filter, update, { new: true }).exec();
     }
 }
