@@ -7,22 +7,22 @@ import { CustomersModule } from './customers/customers.module';
 import { validationSchema } from '../config/validation';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-        isGlobal: true,
-        envFilePath: `config/.env.${process.env.NODE_ENV || 'development'}`,
-        validationSchema,
-    }),
-    MongooseModule.forRootAsync({
-        imports: [ConfigModule],
-        inject: [ConfigService],
-        useFactory: async (configService: ConfigService) => ({
-            uri: configService.get<string>('MONGO_URI'),
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: `config/.env.${process.env.NODE_ENV || 'development'}`,
+            validationSchema,
         }),
-    }),
-    CustomersModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+        MongooseModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: async (configService: ConfigService) => ({
+                uri: configService.get<string>('MONGO_URI'),
+            }),
+        }),
+        CustomersModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

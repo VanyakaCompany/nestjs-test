@@ -11,7 +11,7 @@ export class CustomersController {
     constructor(
         private readonly customersService: CustomersService,
         private readonly parserService: ParserService,
-    ) {}
+    ) { }
 
     @Get('customers')
     @UsePipes(PaginationPipe)
@@ -26,7 +26,7 @@ export class CustomersController {
 
         const added: any[] = []
         const invalid: any[] = []
-        const duplicated:any[] = []
+        const duplicated: any[] = []
         const failed: any[] = []
 
         for (const customer of parsed.customers.customer) {

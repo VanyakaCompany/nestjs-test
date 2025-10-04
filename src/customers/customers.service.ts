@@ -6,7 +6,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 
 @Injectable()
 export class CustomersService {
-    constructor(@InjectModel(Customer.name) private customerModel: Model<Customer>) {}
+    constructor(@InjectModel(Customer.name) private customerModel: Model<Customer>) { }
 
     async findAllWithPagination(page: number, limit: number) {
         const skip = (page - 1) * limit;
