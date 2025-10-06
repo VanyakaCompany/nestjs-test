@@ -7,6 +7,7 @@ export class ParserService {
 
     constructor() {
         this.parser = new XMLParser({
+            isArray: (tagName) => tagName === 'customer',
             ignoreAttributes: false,
             attributeNamePrefix: '@_',
             allowBooleanAttributes: true,

@@ -2,16 +2,14 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { CustomersModule } from './customers/customers.module';
-import { validationSchema } from '../config/validation';
+import { validationSchema } from './config/validation';
 
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
-            envFilePath: `config/.env.${process.env.NODE_ENV || 'development'}`,
+            envFilePath: `${process.cwd()}/src/config/.env.${process.env.NODE_ENV || 'development'}`,
             validationSchema,
         }),
         MongooseModule.forRootAsync({
@@ -24,7 +22,7 @@ import { validationSchema } from '../config/validation';
         ScheduleModule.forRoot(),
         CustomersModule,
     ],
-    controllers: [AppController],
-    providers: [AppService],
+    controllers: [],
+    providers: [],
 })
 export class AppModule { }

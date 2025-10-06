@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, UsePipes, BadRequestException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { ParserService } from './parser.service';
@@ -23,6 +23,10 @@ export class CustomersController {
     @Post('upload')
     async upload(@Body() rawXml: string) {
         const parsed = this.parserService.parseSafe(rawXml);
+
+        if (!parsed.customers || !parsed.customers.customer) {
+            throw new BadRequestException('Invalid XML structure (no customers/customer)');
+        }
 
         const added: any[] = []
         const invalid: any[] = []

@@ -30,9 +30,11 @@ export class TasksService {
         job.start();
     }
 
-    @Cron(CronExpression.EVERY_30_SECONDS, { name: 'status-update' })
-    async handleCron() {
-        const cronName = 'status-update';
+    @Cron(CronExpression.EVERY_30_SECONDS, { name: 'update-status' })
+    async updateStatus() {
+        const cronName = 'update-status';
+        const interval = this.configService.get<string>('API_INTERVAL')!;
+        const timeout = this.configService.get<string>('API_TIMEOUT')!;
 
         try {
             let customer = await this.customersService.findOne({}, {
@@ -46,13 +48,13 @@ export class TasksService {
 
                 if (customer) this.logger.debug(`Customer #${customer.id} get status '${customer.status}'`);
 
-                this.rescheduleCron(cronName, this.configService.get<string>('API_INTERVAL')!)
+                this.rescheduleCron(cronName, interval);
             } else {
-                this.rescheduleCron(cronName, this.configService.get<string>('API_TIMEOUT')!)
+                this.rescheduleCron(cronName, timeout);
             }
         } catch (err) {
             this.logger.error(`Couldn't get сustomer status`);
-            this.rescheduleCron(cronName, this.configService.get<string>('API_TIMEOUT')!)
+            this.rescheduleCron(cronName, timeout);
         }
     }
 }

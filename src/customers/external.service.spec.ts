@@ -31,6 +31,12 @@ describe('ExternalService', () => {
         configService = module.get<ConfigService>(ConfigService);
     });
 
+
+    it('should be defined', () => {
+        expect(externalService).toBeDefined();
+    });
+
+
     it('should return status from API', async () => {
         mockAxios.get.mockResolvedValueOnce({ data: { id: 123, status: 'verified' } });
 
@@ -40,6 +46,7 @@ describe('ExternalService', () => {
         expect(mockAxios.get).toHaveBeenCalledWith('http://mock-api.com/verify/123');
         expect(configService.get).toHaveBeenCalledWith('API_URI');
     });
+    
 
     it('should throw if axios fails', async () => {
         mockAxios.get.mockRejectedValueOnce(new Error('Network error'));
