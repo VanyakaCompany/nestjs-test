@@ -14,7 +14,7 @@ export class TasksService {
         private readonly customersService: CustomersService,
         private readonly externalService: ExternalService,
         private readonly schedulerRegistry: SchedulerRegistry,
-    ) { }
+    ) {}
 
     private rescheduleCron(name: string, delay: number | string): void {
         const job = this.schedulerRegistry.getCronJob(name);
@@ -37,10 +37,13 @@ export class TasksService {
         const timeout = this.configService.get<string>('API_TIMEOUT')!;
 
         try {
-            let customer = await this.customersService.findOne({}, {
-                excludeFields: ['status'],
-                sort: { updatedAt: 1 },
-            });
+            let customer = await this.customersService.findOne(
+                {},
+                {
+                    excludeFields: ['status'],
+                    sort: { updatedAt: 1 },
+                },
+            );
 
             if (customer) {
                 const status = await this.externalService.getStatus(customer.id);

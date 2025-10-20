@@ -12,4 +12,4 @@ import { TasksService } from './tasks.service';
     controllers: [CustomersController],
     providers: [ParserService, CustomersService, ExternalService, TasksService],
 })
-export class CustomersModule { }
+export class CustomersModule {}

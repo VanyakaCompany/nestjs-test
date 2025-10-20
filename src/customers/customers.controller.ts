@@ -11,7 +11,7 @@ export class CustomersController {
     constructor(
         private readonly customersService: CustomersService,
         private readonly parserService: ParserService,
-    ) { }
+    ) {}
 
     @Get('customers')
     @UsePipes(PaginationPipe)
@@ -28,10 +28,10 @@ export class CustomersController {
             throw new BadRequestException('Invalid XML structure (no customers/customer)');
         }
 
-        const added: any[] = []
-        const invalid: any[] = []
-        const duplicated: any[] = []
-        const failed: any[] = []
+        const added: any[] = [];
+        const invalid: any[] = [];
+        const duplicated: any[] = [];
+        const failed: any[] = [];
 
         for (const customer of parsed.customers.customer) {
             const createCustomerDto = plainToInstance(CreateCustomerDto, customer);
@@ -43,7 +43,7 @@ export class CustomersController {
                 if (err.code === 11000) {
                     duplicated.push(createCustomerDto);
                 } else if (Array.isArray(err) && err[0]?.constraints) {
-                    const reason = err.map(e => Object.values(e.constraints || {})).flat();
+                    const reason = err.map((e) => Object.values(e.constraints || {})).flat();
                     invalid.push({ ...createCustomerDto, reason });
                 } else {
                     failed.push(createCustomerDto);

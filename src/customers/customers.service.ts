@@ -6,7 +6,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 
 @Injectable()
 export class CustomersService {
-    constructor(@InjectModel(Customer.name) private customerModel: Model<Customer>) { }
+    constructor(@InjectModel(Customer.name) private customerModel: Model<Customer>) {}
 
     async findAllWithPagination(page: number, limit: number) {
         const skip = (page - 1) * limit;
@@ -32,15 +32,15 @@ export class CustomersService {
     async findOne(
         filter: FilterQuery<Customer>,
         options?: {
-            excludeFields?: (keyof Customer)[],
-            projection?: Record<string, 0 | 1>,
-            sort?: Record<string, SortOrder>
-        }
+            excludeFields?: (keyof Customer)[];
+            projection?: Record<string, 0 | 1>;
+            sort?: Record<string, SortOrder>;
+        },
     ): Promise<Customer | null> {
         const query: FilterQuery<Customer> = { ...filter };
 
         if (options?.excludeFields?.length) {
-            options.excludeFields.forEach(field => {
+            options.excludeFields.forEach((field) => {
                 query[field] = { $exists: false };
             });
         }

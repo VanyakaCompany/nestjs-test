@@ -9,7 +9,7 @@ import * as bodyParser from 'body-parser';
 import { App } from 'supertest/types';
 import { CustomersModule } from './../src/customers/customers.module';
 import { Customer, CustomerSchema } from '../src/customers/schemas/customer.schema';
-import { ExternalService } from '../src/customers/external.service'
+import { ExternalService } from '../src/customers/external.service';
 import { TasksService } from '../src/customers/tasks.service';
 import { CustomersService } from '../src/customers/customers.service';
 
@@ -31,14 +31,16 @@ describe('CustomersModule (e2e)', () => {
                 }),
                 MongooseModule.forFeature([{ name: Customer.name, schema: CustomerSchema }]),
                 ScheduleModule.forRoot(),
-                CustomersModule
+                CustomersModule,
             ],
-            providers: [ExternalService, TasksService, CustomersService]
+            providers: [ExternalService, TasksService, CustomersService],
         })
-            .overrideProvider(ExternalService).useValue({
+            .overrideProvider(ExternalService)
+            .useValue({
                 getStatus: jest.fn().mockResolvedValue('verified'),
             })
-            .overrideProvider(ConfigService).useValue({
+            .overrideProvider(ConfigService)
+            .useValue({
                 get: jest.fn().mockImplementation((key: string) => {
                     if (key === 'API_INTERVAL') return 10000;
                     if (key === 'API_TIMEOUT') return 10000;
@@ -61,7 +63,6 @@ describe('CustomersModule (e2e)', () => {
         await mongoServer.stop();
     });
 
-
     it('/upload (POST) — should parse XML and insert customers into DB', async () => {
         const xmlData = `
             <customers>
@@ -83,9 +84,8 @@ describe('CustomersModule (e2e)', () => {
             .set('Content-Type', 'application/xml')
             .send(xmlData)
             .expect(201)
-            .then(res => expect(res.body.added.length).toBe(2))
+            .then((res) => expect(res.body.added.length).toBe(2));
     });
-
 
     it('/upload (POST) — should validate XML syntax', async () => {
         const xmlData = `
@@ -103,9 +103,8 @@ describe('CustomersModule (e2e)', () => {
             .set('Content-Type', 'application/xml')
             .send(xmlData)
             .expect(400)
-            .then(res => expect(res.body.error).toBe('Invalid XML'))
+            .then((res) => expect(res.body.error).toBe('Invalid XML'));
     });
-
 
     it('/upload (POST) — should validate XML structure', async () => {
         const xmlData = `
@@ -121,9 +120,8 @@ describe('CustomersModule (e2e)', () => {
             .set('Content-Type', 'application/xml')
             .send(xmlData)
             .expect(400)
-            .then(res => expect(res.body.message).toMatch(/Invalid XML structure/))
+            .then((res) => expect(res.body.message).toMatch(/Invalid XML structure/));
     });
-
 
     it('/upload (POST) — should validate customers data', async () => {
         const xmlData = `
@@ -140,13 +138,12 @@ describe('CustomersModule (e2e)', () => {
             .post('/upload')
             .set('Content-Type', 'application/xml')
             .send(xmlData)
-            .expect(201)
+            .expect(201);
 
         expect(response.body.added.length).toBe(0);
         expect(response.body.invalid.length).toBe(1);
         expect(response.body.invalid[0].reason).toContain('Email must be valid');
     });
-
 
     it('should update customer status via scheduled task', async () => {
         await tasksService.updateStatus(); // Явно вызываем задачу (вместо cron-триггера)
@@ -158,18 +155,15 @@ describe('CustomersModule (e2e)', () => {
         expect(updated?.status).toBe('verified');
     });
 
-
     it('/customers (GET) — should return customers with pagination', async () => {
-        const response = await request(app.getHttpServer())
-            .get('/customers')
-            .expect(200)
+        const response = await request(app.getHttpServer()).get('/customers').expect(200);
 
-        expect(response.body.data.length).toBe(2)
+        expect(response.body.data.length).toBe(2);
         expect(response.body.meta).toEqual({
             total: expect.any(Number),
             page: expect.any(Number),
             limit: expect.any(Number),
             totalPages: expect.any(Number),
-        })
+        });
     });
 });

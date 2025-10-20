@@ -25,4 +25,4 @@ import { validationSchema } from './config/validation';
     controllers: [],
     providers: [],
 })
-export class AppModule { }
+export class AppModule {}
