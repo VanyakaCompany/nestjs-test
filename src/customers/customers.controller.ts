@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Query, Body, UsePipes, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { ParserService } from './parser.service';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { PaginationPipe } from '../common/pipes/pagination.pipe';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
+import { CustomerDto } from './dto/customers.dto';
+import { isMongoError, isValidationErrorArray } from '../common/errors/error-guards';
+import { extractValidationMessages } from '../common/errors/error.utils';
 
 @Controller()
 export class CustomersController {
@@ -14,9 +16,8 @@ export class CustomersController {
     ) {}
 
     @Get('customers')
-    @UsePipes(PaginationPipe)
-    async findAll(@Query() query: { page: number; limit: number }) {
-        const { page, limit } = query;
+    async findAll(@Query() pagination: PaginationQueryDto) {
+        const { page, limit } = pagination;
         return this.customersService.findAllWithPagination(page, limit);
     }
 
@@ -24,29 +25,24 @@ export class CustomersController {
     async upload(@Body() rawXml: string) {
         const parsed = this.parserService.parseSafe(rawXml);
 
-        if (!parsed.customers || !parsed.customers.customer) {
-            throw new BadRequestException('Invalid XML structure (no customers/customer)');
-        }
-
         const added: any[] = [];
         const invalid: any[] = [];
         const duplicated: any[] = [];
         const failed: any[] = [];
 
         for (const customer of parsed.customers.customer) {
-            const createCustomerDto = plainToInstance(CreateCustomerDto, customer);
+            const customerDto = plainToInstance(CustomerDto, customer);
 
             try {
-                await validateOrReject(createCustomerDto, { whitelist: true });
-                added.push(await this.customersService.create(createCustomerDto));
+                await validateOrReject(customerDto, { whitelist: true });
+                added.push(await this.customersService.create(customerDto));
             } catch (err) {
-                if (err.code === 11000) {
-                    duplicated.push(createCustomerDto);
-                } else if (Array.isArray(err) && err[0]?.constraints) {
-                    const reason = err.map((e) => Object.values(e.constraints || {})).flat();
-                    invalid.push({ ...createCustomerDto, reason });
+                if (isMongoError(err) && err.code === 11000) {
+                    duplicated.push(customerDto);
+                } else if (isValidationErrorArray(err)) {
+                    invalid.push({ ...customerDto, reason: extractValidationMessages(err) });
                 } else {
-                    failed.push(createCustomerDto);
+                    failed.push(customerDto);
                 }
             }
         }

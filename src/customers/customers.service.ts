@@ -2,7 +2,7 @@ import { Model, FilterQuery, SortOrder, UpdateQuery } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Customer } from './schemas/customer.schema';
-import { CreateCustomerDto } from './dto/create-customer.dto';
+import { CustomerDto } from './dto/customers.dto';
 
 @Injectable()
 export class CustomersService {
@@ -58,8 +58,8 @@ export class CustomersService {
         return mongoQuery.exec();
     }
 
-    async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
-        const createdCustomer = new this.customerModel(createCustomerDto);
+    async create(customerDto: CustomerDto): Promise<Customer> {
+        const createdCustomer = new this.customerModel(customerDto);
         return createdCustomer.save();
     }
 

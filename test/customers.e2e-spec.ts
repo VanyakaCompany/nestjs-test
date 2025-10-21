@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,6 +12,36 @@ import { Customer, CustomerSchema } from '../src/customers/schemas/customer.sche
 import { ExternalService } from '../src/customers/external.service';
 import { TasksService } from '../src/customers/tasks.service';
 import { CustomersService } from '../src/customers/customers.service';
+import { CustomerDto } from '../src/customers/dto/customers.dto';
+
+interface UploadResponse<T = any> {
+    body: {
+        added: T[];
+        invalid: (T & { reason?: string[] })[];
+        duplicated: T[];
+        failed: T[];
+    };
+}
+
+interface PaginatedResponse<T = any> {
+    body: {
+        data: T[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    };
+}
+
+interface ErrorResponse {
+    body: {
+        message: string;
+        error: string;
+        statusCode: number;
+    };
+}
 
 describe('CustomersModule (e2e)', () => {
     let app: INestApplication<App>;
@@ -27,7 +57,7 @@ describe('CustomersModule (e2e)', () => {
             imports: [
                 ConfigModule.forRoot({ isGlobal: true }),
                 MongooseModule.forRootAsync({
-                    useFactory: async () => ({ uri: mongoServer.getUri() }),
+                    useFactory: () => ({ uri: mongoServer.getUri() }),
                 }),
                 MongooseModule.forFeature([{ name: Customer.name, schema: CustomerSchema }]),
                 ScheduleModule.forRoot(),
@@ -51,6 +81,7 @@ describe('CustomersModule (e2e)', () => {
 
         app = moduleFixture.createNestApplication();
         app.use(bodyParser.text({ type: 'application/xml' }));
+        app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
         await app.init();
 
         customersService = app.get<CustomersService>(CustomersService);
@@ -84,7 +115,7 @@ describe('CustomersModule (e2e)', () => {
             .set('Content-Type', 'application/xml')
             .send(xmlData)
             .expect(201)
-            .then((res) => expect(res.body.added.length).toBe(2));
+            .then((res: UploadResponse<CustomerDto>) => expect(res.body.added.length).toBe(2));
     });
 
     it('/upload (POST) — should validate XML syntax', async () => {
@@ -103,7 +134,7 @@ describe('CustomersModule (e2e)', () => {
             .set('Content-Type', 'application/xml')
             .send(xmlData)
             .expect(400)
-            .then((res) => expect(res.body.error).toBe('Invalid XML'));
+            .then((res: ErrorResponse) => expect(res.body.error).toBe('Invalid XML'));
     });
 
     it('/upload (POST) — should validate XML structure', async () => {
@@ -120,7 +151,7 @@ describe('CustomersModule (e2e)', () => {
             .set('Content-Type', 'application/xml')
             .send(xmlData)
             .expect(400)
-            .then((res) => expect(res.body.message).toMatch(/Invalid XML structure/));
+            .then((res: ErrorResponse) => expect(res.body.message).toMatch(/Invalid XML structure/));
     });
 
     it('/upload (POST) — should validate customers data', async () => {
@@ -134,7 +165,7 @@ describe('CustomersModule (e2e)', () => {
             </customers>
         `;
 
-        const response = await request(app.getHttpServer())
+        const response: UploadResponse<CustomerDto> = await request(app.getHttpServer())
             .post('/upload')
             .set('Content-Type', 'application/xml')
             .send(xmlData)
@@ -156,14 +187,16 @@ describe('CustomersModule (e2e)', () => {
     });
 
     it('/customers (GET) — should return customers with pagination', async () => {
-        const response = await request(app.getHttpServer()).get('/customers').expect(200);
+        const response: PaginatedResponse<CustomerDto> = await request(app.getHttpServer())
+            .get('/customers')
+            .expect(200);
 
         expect(response.body.data.length).toBe(2);
         expect(response.body.meta).toEqual({
-            total: expect.any(Number),
-            page: expect.any(Number),
-            limit: expect.any(Number),
-            totalPages: expect.any(Number),
+            total: expect.any(Number) as number,
+            page: expect.any(Number) as number,
+            limit: expect.any(Number) as number,
+            totalPages: expect.any(Number) as number,
         });
     });
 });

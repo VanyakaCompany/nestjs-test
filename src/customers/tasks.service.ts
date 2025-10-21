@@ -55,7 +55,7 @@ export class TasksService {
             } else {
                 this.rescheduleCron(cronName, timeout);
             }
-        } catch (err) {
+        } catch {
             this.logger.error(`Couldn't get сustomer status`);
             this.rescheduleCron(cronName, timeout);
         }

@@ -15,7 +15,7 @@ import { validationSchema } from './config/validation';
         MongooseModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
-            useFactory: async (configService: ConfigService) => ({
+            useFactory: (configService: ConfigService) => ({
                 uri: configService.get<string>('MONGO_URI'),
             }),
         }),

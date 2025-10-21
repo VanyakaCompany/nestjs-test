@@ -1,5 +1,10 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
+import { CustomersDto } from './dto/customers.dto';
+
+interface ParsedCustomers {
+    customers: CustomersDto;
+}
 
 @Injectable()
 export class ParserService {
@@ -14,9 +19,6 @@ export class ParserService {
         });
     }
 
-    /**
-     * Проверка XML на валидность
-     */
     validate(rawXml: string): void {
         const validation = XMLValidator.validate(rawXml);
         if (validation !== true) {
@@ -27,18 +29,18 @@ export class ParserService {
         }
     }
 
-    /**
-     * Парсинг XML в объект
-     */
-    parse<T = any>(rawXml: string): T {
-        return this.parser.parse(rawXml);
+    parse(rawXml: string): ParsedCustomers {
+        const result = this.parser.parse(rawXml) as ParsedCustomers;
+
+        if (!result.customers || !result.customers.customer) {
+            throw new BadRequestException('Invalid XML structure (no customers/customer)');
+        }
+
+        return result;
     }
 
-    /**
-     * Удобный метод: сразу validate + parse
-     */
-    parseSafe<T = any>(rawXml: string): T {
+    parseSafe(rawXml: string): ParsedCustomers {
         this.validate(rawXml);
-        return this.parse<T>(rawXml);
+        return this.parse(rawXml);
     }
 }

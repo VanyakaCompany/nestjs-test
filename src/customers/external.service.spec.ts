@@ -45,9 +45,13 @@ describe('ExternalService', () => {
         expect(configService.get).toHaveBeenCalledWith('API_URI');
     });
 
+    it('should throw if API return incorrect data', async () => {
+        mockAxios.get.mockResolvedValueOnce({ data: { status: 0 } });
+        await expect(externalService.getStatus(123)).rejects.toThrow('Invalid response from external API');
+    });
+
     it('should throw if axios fails', async () => {
         mockAxios.get.mockRejectedValueOnce(new Error('Network error'));
-
         await expect(externalService.getStatus(123)).rejects.toThrow('Network error');
     });
 });
