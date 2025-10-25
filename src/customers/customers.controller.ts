@@ -22,7 +22,7 @@ export class CustomersController {
     }
 
     @Post('upload')
-    async upload(@Body() rawXml: string) {
+    async upload(@Body() rawXml: string = '') {
         const parsed = this.parserService.parseSafe(rawXml);
 
         const added: any[] = [];

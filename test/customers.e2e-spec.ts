@@ -80,7 +80,7 @@ describe('CustomersModule (e2e)', () => {
             .compile();
 
         app = moduleFixture.createNestApplication();
-        app.use(bodyParser.text({ type: 'application/xml' }));
+        app.use(bodyParser.text({ type: ['application/xml', 'text/xml'] }));
         app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
         await app.init();
 
@@ -116,6 +116,27 @@ describe('CustomersModule (e2e)', () => {
             .send(xmlData)
             .expect(201)
             .then((res: UploadResponse<CustomerDto>) => expect(res.body.added.length).toBe(2));
+    });
+
+    it('/upload (POST) — should validate Content-Type', async () => {
+        await request(app.getHttpServer())
+            .post('/upload')
+            .set('Content-Type', 'application/json')
+            .expect(400)
+            .then((res: ErrorResponse) => expect(res.body.message).toMatch(/Expected XML/));
+
+        await request(app.getHttpServer())
+            .post('/upload')
+            .expect(400)
+            .then((res: ErrorResponse) => expect(res.body.message).toMatch(/Expected XML/));
+    });
+
+    it('/upload (POST) — should handle an empty body correctly', async () => {
+        return request(app.getHttpServer())
+            .post('/upload')
+            .set('Content-Type', 'application/xml')
+            .expect(400)
+            .then((res: ErrorResponse) => expect(res.body.error).toBe('Invalid XML'));
     });
 
     it('/upload (POST) — should validate XML syntax', async () => {

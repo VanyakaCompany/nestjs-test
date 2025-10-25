@@ -8,7 +8,7 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     const configService = app.get(ConfigService);
 
-    app.use(bodyParser.text({ type: 'application/xml' }));
+    app.use(bodyParser.text({ type: ['application/xml', 'text/xml'] }));
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
     await app.listen(configService.get<number>('PORT')!);
